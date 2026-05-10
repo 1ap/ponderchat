@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-smartclaude - Smart Claude CLI with 2D routing
+ponderchat - Select the right Claude model and reasoning depth per prompt
 
 Two independent dimensions:
   --tier   haiku | sonnet | opus       (which model)
   --effort low | medium | high | xhigh | max  (how hard to think)
 
 Usage:
-    smartclaude "your question"                   # auto routing
-    smartclaude --tier opus --effort max "..."    # force both
-    smartclaude --tier sonnet "..."               # force tier, auto effort
-    smartclaude --policy cheap "..."              # apply cost policy
-    smartclaude                                    # interactive mode
-    smartclaude --usage                            # show stats
+    ponderchat "your question"                   # auto routing
+    ponderchat --tier opus --effort max "..."    # force both
+    ponderchat --tier sonnet "..."               # force tier, auto effort
+    ponderchat --policy cheap "..."              # apply cost policy
+    ponderchat                                    # interactive mode
+    ponderchat --usage                            # show stats
 """
 
 import argparse
@@ -197,7 +197,7 @@ def cmd_oneshot(args, router):
 
 
 def cmd_interactive(args, router):
-    print(f"{C.BOLD}smartclaude{C.RESET} {C.DIM}— interactive mode{C.RESET}")
+    print(f"{C.BOLD}ponderchat{C.RESET} {C.DIM}— interactive mode{C.RESET}")
     print(f"{C.DIM}Commands: /usage /reset /quit /tier <name> /effort <name> /policy <name>{C.RESET}\n")
 
     forced_tier = args.tier
@@ -300,7 +300,7 @@ def cmd_interactive(args, router):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="smartclaude",
+        prog="ponderchat",
         description="Smart Claude CLI with 2D routing (tier × effort)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -309,12 +309,12 @@ Two independent dimensions:
   --effort       how hard to think
 
 Examples:
-  smartclaude "What's 2+2?"                    Auto: haiku + low
-  smartclaude "Hard math problem"              Auto: opus + high
-  smartclaude --tier sonnet "any prompt"       Force sonnet, auto effort
-  smartclaude --tier opus --effort max "..."   Force both
-  smartclaude --policy cheap "..."             Apply cost policy
-  smartclaude --policy quality "..."           Apply quality policy
+  ponderchat "What's 2+2?"                    Auto: haiku + low
+  ponderchat "Hard math problem"              Auto: opus + high
+  ponderchat --tier sonnet "any prompt"       Force sonnet, auto effort
+  ponderchat --tier opus --effort max "..."   Force both
+  ponderchat --policy cheap "..."             Apply cost policy
+  ponderchat --policy quality "..."           Apply quality policy
 
 Policies:
   auto      Use classifier output as-is (default)
@@ -358,7 +358,7 @@ Plans: free, pro, max_5x, max_20x
         print(f"{C.RED}Error: {e}{C.RESET}", file=sys.stderr)
         sys.exit(1)
 
-    session_dir = Path.home() / ".smartclaude" / args.session
+    session_dir = Path.home() / ".ponderchat" / args.session
     session_dir.mkdir(parents=True, exist_ok=True)
     os.chdir(session_dir)
 

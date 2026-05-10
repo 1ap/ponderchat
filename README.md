@@ -1,22 +1,22 @@
-# smartclaude
+# ponderchat
 
-CLI that wraps Claude with smart routing — picks the right model and reasoning depth per prompt, falls back to a thinking-mode local model on uncertain cases, and asks you when it's genuinely ambiguous.
+CLI that selects the right Claude model and reasoning depth per prompt — picks Haiku for simple tasks, Opus for complex ones, auto-tunes reasoning depth, and asks you when genuinely uncertain.
 
-## How it actually works
+## How it works
 
 ```
 Your prompt
     ↓
-┌─ Tier 1: Gemma 4 E4B, thinking off  (~100-150ms)
-│  └─ if confidence < 0.75
-├─ Tier 2: Gemma 4 E4B, thinking on   (~500-800ms)
-│  └─ if confidence < 0.55
-└─ Tier 3: Ask you                     (interactive disambiguation)
+┌─ Tier 1: Gemma 4 E4B classifier, fast mode  (~100-150ms)
+│  └─ if confidence < 0.75, escalate
+├─ Tier 2: Gemma 4 E4B with reasoning         (~500-800ms)
+│  └─ if confidence < 0.55, ask user
+└─ Tier 3: You pick from top alternatives
     ↓
-Routes to Claude with chosen tier × effort
+Routes to Claude (Haiku/Sonnet/Opus) × (low/medium/high/xhigh/max effort)
 ```
 
-One model loaded (~3.5GB), three reliability levels. Average latency stays low because most prompts are confident on Tier 1.
+One local classifier (~3.5GB), three safety nets. Most prompts decide in Tier 1.
 
 ## Two routing dimensions
 
@@ -40,7 +40,7 @@ pip install -r requirements.txt
 export ANTHROPIC_API_KEY="your-key-here"
 
 # 4. First run will download Gemma 4 E4B (~3.5GB)
-smartclaude "What's 2+2?"
+ponderchat "What's 2+2?"
 ```
 
 ## Usage
@@ -48,14 +48,14 @@ smartclaude "What's 2+2?"
 ### Auto routing (default)
 
 ```bash
-smartclaude "Refactor this function"
+ponderchat "Refactor this function"
 # → sonnet + medium (auto-picked)
 ```
 
 ### See the classifier work
 
 ```bash
-$ smartclaude "Implement a custom comparator for sorting"
+$ ponderchat "Implement a custom comparator for sorting"
 ┌─ sonnet + medium effort · 58% conf · mlx · 92ms
 └─ code_or_math, multi_step_logic
   ↳ Confidence 0.58 below threshold, escalating to thinking mode
@@ -74,25 +74,25 @@ Choose: [1/2/q] _
 ### Force a specific tier or effort
 
 ```bash
-smartclaude --tier opus --effort max "complex problem"   # Force both
-smartclaude --tier sonnet "any prompt"                   # Force tier, auto effort
-smartclaude --effort high "any prompt"                   # Force effort, auto tier
-smartclaude --no-escalate "..."                          # Skip user escalation
+ponderchat --tier opus --effort max "complex problem"   # Force both
+ponderchat --tier sonnet "any prompt"                   # Force tier, auto effort
+ponderchat --effort high "any prompt"                   # Force effort, auto tier
+ponderchat --no-escalate "..."                          # Skip user escalation
 ```
 
 ### Apply a policy
 
 ```bash
-smartclaude --policy cheap "..."     # Cap at sonnet, max effort medium
-smartclaude --policy balanced "..."  # Downgrade xhigh/max → high
-smartclaude --policy quality "..."   # Min sonnet for high+ effort
-smartclaude --policy max "..."       # Always opus + max effort
+ponderchat --policy cheap "..."     # Cap at sonnet, max effort medium
+ponderchat --policy balanced "..."  # Downgrade xhigh/max → high
+ponderchat --policy quality "..."   # Min sonnet for high+ effort
+ponderchat --policy max "..."       # Always opus + max effort
 ```
 
 ### Interactive mode
 
 ```bash
-$ smartclaude
+$ ponderchat
 [0] > Help me design a database schema
 ┌─ sonnet + high effort · 88% conf · mlx · 95ms
 
@@ -184,7 +184,7 @@ Lower = more conservative (asks user more often). Higher = more aggressive (trus
 Data flow:
 1. Your prompt → local Gemma 4 on your machine (no network)
 2. Your prompt → Anthropic's Claude API (HTTPS, per their privacy policy)
-3. Conversation history → `~/.smartclaude/<session>/` (local)
+3. Conversation history → `~/.ponderchat/<session>/` (local)
 4. Classification cache → `~/.classifier_cache/` (local)
 
 No telemetry. Nothing else sent anywhere.
@@ -216,7 +216,7 @@ Provided as-is, no warranty. Use at your own risk.
 classifier.py        Gemma 4 classifier with hybrid thinking cascade
 session_manager.py   Token tracking & plan limits
 router.py           Smart Claude API integration with adaptive thinking
-smartclaude         CLI entry point
+ponderchat         CLI entry point
 install.sh          Installer
 requirements.txt    pip dependencies
 ```
