@@ -1,0 +1,7 @@
+# Core dependencies
+mlx>=0.0.10           # Apple Silicon ML framework
+mlx-lm>=0.0.6         # MLX language model utilities
+anthropic>=0.40.0     # Claude API client
+
+# Optional but recommended
+huggingface-hub       # For downloading models
